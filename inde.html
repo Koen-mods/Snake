@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Snake with p5.js</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <p id="KAAS">Length of snake: </p>
+</head>
+<body>
+<script>
+let snake;
+let food;
+let resolution = 20;
+let cols, rows;
+let speed = 0;
+let speedUpdateVal = 0;
+const somethin = document.querySelector("#KAAS");
+
+function setup() {
+  createCanvas(600, 600);
+  frameRate(10); // speed of snake
+  cols = floor(width / resolution);
+  rows = floor(height / resolution);
+  snake = new Snake();
+  placeFood();
+}
+
+function draw() {
+  background(51);
+
+  snake.update();
+  snake.show();
+
+  // Check if snake eats food
+  if (snake.eat(food)) {
+    placeFood();
+  }
+
+  // Draw food
+  fill(255, 0, 0);
+  rect(food.x, food.y, resolution, resolution);
+
+  // Check game over
+  if (snake.checkCollision()) {
+    noLoop();
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(32);
+    text("Game Over! Score: " + snake.total, width / 2, height / 2);
+  }
+}
+
+// Place food in random spot
+function placeFood() {
+  let x = floor(random(cols)) * resolution;
+  let y = floor(random(rows)) * resolution;
+  food = createVector(x, y);
+}
+
+// Snake object
+class Snake {
+  constructor() {
+    this.body = [];
+    this.body[0] = createVector(floor(cols/2)*resolution, floor(rows/2)*resolution);
+    this.xdir = 1;
+    this.ydir = 0;
+    this.total = 0;
+  }
+
+  setDir(x, y) {
+    // prevent reversing direction
+    if (this.xdir !== -x && this.ydir !== -y) {
+      this.xdir = x;
+      console.log(`xdir set to ${x}`);
+      this.ydir = y;
+      console.log(`ydir set to ${y}`);
+    }
+  }
+
+  update() {
+    somethin.innerHTML = `Length of snake: ${this.body.length}`;
+    let head = this.body[this.body.length - 1].copy();
+
+    head.x += this.xdir * resolution + speed;
+    head.y += this.ydir * resolution + speed;
+
+    this.body.push(head);
+
+    if (this.body.length > this.total + 1) {
+      this.body.shift();
+    }
+  }
+
+  show() {
+    fill(0, 255, 0);
+    for (let v of this.body) {
+      rect(v.x, v.y, resolution, resolution);
+    }
+  }
+
+  eat(pos) {
+    let head = this.body[this.body.length - 1];
+    if (head.x === pos.x && head.y === pos.y) {
+      this.total++;
+      speedUpdateVal += 0.1;
+      if (speedUpdateVal == 1) {
+        speed++;
+        speedUpdateVal = 0;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  checkCollision() {
+    let head = this.body[this.body.length - 1];
+
+    // Wall collision
+    if (head.x < 0 || head.x >= width || head.y < 0 || head.y >= height) {
+      return true;
+    }
+
+    // Self collision
+    for (let i = 0; i < this.body.length - 1; i++) {
+      if (head.x === this.body[i].x && head.y === this.body[i].y) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+}
+
+// Controls
+function keyPressed() {
+  if (keyCode === UP_ARROW) { snake.setDir(0, -1); console.log("UP YOU MOTHERFUCKER"); }
+  if (keyCode === DOWN_ARROW) snake.setDir(0, 1);
+  if (keyCode === LEFT_ARROW) snake.setDir(-1, 0);
+  if (keyCode === RIGHT_ARROW) snake.setDir(1, 0);
+}
+</script>
+</body>
+</html>
